@@ -26,7 +26,7 @@ This project demonstrates a simple end-to-end Retrieval-Augmented Generation (**
   * requirements.txt
 * If you need to install additionally library, you can put it in **requirements.txt** file together with the library version. During deployment, all required libraries will be installed based on **requirements.txt** file.
 * Once you have successfully run all cells in **rag_app** notebook file, you will see below vector search endpoint named **test_vector_search**.
-* ![](./rag_vector_search_endpoint.jpg)
+* ![](./rag_vector_search_endpoint.png)
 * Deployment steps
   * Click on **Compute** on left panel / sidebar, then go to **Apps** tab.
   * In the **Apps** tab, click **Create app** button.
@@ -34,16 +34,16 @@ This project demonstrates a simple end-to-end Retrieval-Augmented Generation (**
   * In **Create new app** screen, for **App name** field, enter **rag**, then click the **Create app** button.
   * It will take a while to create the application instance.
   * Once the application instance is created, then click **Deploy** button.
-  * ![](./rag_deploy.jpg)
+  * ![](./rag_deploy.png)
   * In **Create deployment** window, select the workspace location when you keep all of the 4 files above and click **Deploy** button to continue.
-  * ![](./rag_select_folder.jpg)
+  * ![](./rag_select_folder.png)
   * Once deployed successfully, then you can see below screen.
-  * ![](./rag_deploy_success.jpg)
+  * ![](./rag_deploy_success.png)
   * You can copy the newly generated URL link and paste it in your browser to test it. Alternatively you can launch it by clicking the icon after the URL link.
   * Below screen shows the answer from vector database.
-  * ![](./rag_streamlit.jpg)
+  * ![](./rag_streamlit.png)
   * Below screen shows the answer from Internet (with a **WARNING** label) as it cannot retrieve the answer from vector database.
-  ![](./rag_streamlit_internet.jpg)
+  ![](./rag_streamlit_internet.png)
   * Databricks will start and run the Streamlit application (using command: streamlit run app.py) automatically.
 
 ## References
