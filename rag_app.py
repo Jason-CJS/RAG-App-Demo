@@ -104,9 +104,6 @@ def check_if_volume_exists() -> bool:
         return True
     except (ResourceDoesNotExist, NotFound):
         return False
-    # except Exception as e:
-    #     print(f"Error checking volume: {e}")
-    #     return False
 
 def create_volume():
     try:
@@ -266,10 +263,6 @@ for ext in file_types:
                 loader = UnstructuredLoader(file_path)
                 documents.extend(loader.load())
 
-# print(documents)
-# 'creationdate': '2023-05-11T12:57:27-07:00', 'moddate': '2023-05-11T12:57:28-07:00
-# display([{"file": doc.metadata.get("source"), "page": doc.metadata.get("page", None), "text": doc.page_content} for doc in documents])
-
 # COMMAND ----------
 
 # DBTITLE 1,Store all document text for each file
@@ -282,10 +275,9 @@ for doc in documents:
     source = doc.metadata.get("source", None)
     grouped_docs[source].append(doc)
 
-# print(grouped_docs)
 text = []
 for source, docs in grouped_docs.items():
-    doc_id = str(uuid.uuid4()) # what is this for?
+    doc_id = str(uuid.uuid4())
     text.append({
         "doc_id": doc_id,
         "doc_text": " ".join([doc.page_content for doc in docs]),        
@@ -296,7 +288,6 @@ for source, docs in grouped_docs.items():
         "uploaded_at": system_time
     })
 
-# print(text)
 df = spark.createDataFrame(text)
 df.write.format("delta").mode("overwrite").option("mergeSchema", "true").saveAsTable(table_doc_text)
 
@@ -327,7 +318,6 @@ df.write.format("delta").mode("overwrite").option("mergeSchema", "true").saveAsT
 # DBTITLE 1,Chunk the document text for each page without chunk_vector
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100, separators=["\n\n", "\n", ".", " "])
 system_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-# embedding_model_instance = DatabricksEmbeddings(endpoint=embedding_model)
 
 chunks = []
 for item in text:
@@ -421,27 +411,6 @@ except Exception as e:
 
 # COMMAND ----------
 
-# DBTITLE 1,Create and index embedding table with existing chunk_vector column
-# MAGIC %skip
-# MAGIC try:
-# MAGIC     client = VectorSearchClient()
-# MAGIC     vector_search_index = client.create_delta_sync_index(
-# MAGIC         endpoint_name=vector_search_endpoint,
-# MAGIC         index_name=table_doc_embedding,
-# MAGIC         source_table_name=table_doc_chunk,
-# MAGIC         pipeline_type="TRIGGERED",
-# MAGIC         embedding_source_column="chunk_text",
-# MAGIC         embedding_model_endpoint_name=embedding_model,
-# MAGIC         primary_key="chunk_id",
-# MAGIC         embedding_vector_column="chunk_vector",
-# MAGIC         embedding_dimension=1024,
-# MAGIC     )
-# MAGIC except Exception as e:
-# MAGIC     print(e)
-# MAGIC     pass
-
-# COMMAND ----------
-
 # DBTITLE 1,Test the RAG
 # Set up MLflow tracking to Databricks
 mlflow.set_tracking_uri("databricks")
@@ -461,7 +430,7 @@ Response rules:
 vector_store = DatabricksVectorSearch(
     endpoint=vector_search_endpoint,
     index_name=table_doc_embedding,
-    # If manually use chunk_vector column, then enable embedding and text_column parameters.
+    # If using chunk_vector column manually, then enable embedding and text_column parameters.
     # The index 'workspace.my_schema.rag_doc_embedding' uses Databricks-managed embeddings. Do not pass the `embedding` parameter when initializing vector store. 
     # embedding=DatabricksEmbeddings(endpoint=embedding_model),
     # The index 'workspace.my_schema.rag_doc_embedding' has the source column configured as 'chunk_text'. Do not pass the `text_column` parameter.
@@ -490,7 +459,7 @@ rag_chain = RunnableSequence(
 
 @mlflow.trace
 def get_internet_answer(question):
-    # Use Databricks LLM to answer from public sources (no context)
+    # Use Databricks LLM to answer from public sources (contextless)
     INTERNET_SYSTEM_PROMPT = """
     You are a helpful assistant. Content is from Internet or public sources. Show the response in below format: 
     Answer: **WARNING: Content is from Internet as answer cannot be found in context.**\n{{answer}}. Source: {{source}}.
@@ -505,13 +474,10 @@ def get_internet_answer(question):
 def invoke_rag_chain(inputs):
     response = rag_chain.invoke(inputs)
     if "Cannot find the answer from the context" in response.content or "Source: Not applicable" in response.content:
-        # internet_answer = get_internet_answer(inputs["question"])
-        # return type("Response", (), {"content": internet_answer})()
         return get_internet_answer(inputs["question"])
-        # return type("Response", (), {"content": internet_answer})()
     return response.content
 
-query = {"question": "Tell me about UWA timetable"}
+query = {"question": "Tell me about the UWA timetable 2025"}
 # query = {"question": "representation of european language data"}
 # query = {"question": "Sea lion"}
 
@@ -519,8 +485,6 @@ run_name = f"RAG on {datetime.now().strftime('%Y-%m-%d')}"
 with mlflow.start_run(run_name=run_name) as run:
     response = invoke_rag_chain(query)
     try:
-        # answer = response.content.strip().split("Answer:")[1].strip().split("Source:")[0].strip()
-        # source = response.content.strip().split("Source:")[1].strip()
         answer = response.strip().split("Answer:")[1].strip().split("Source:")[0].strip()
         source = response.strip().split("Source:")[1].strip()
     except:
@@ -535,10 +499,7 @@ with mlflow.start_run(run_name=run_name) as run:
     mlflow.log_param("embedding_model", embedding_model)
     mlflow.log_param("vector_search_endpoint", vector_search_endpoint)
     mlflow.log_param("index_name", table_doc_embedding)
-    # mlflow.log_metric("response_length", len(response.content))
-    # mlflow.log_text(str(response.content), "response.txt")
-    # mlflow.log_dict({"content": response.content}, "response_full.json")
-    # print(response.content)
+
     mlflow.log_metric("response_length", len(response))
     mlflow.log_text(str(response), "response.txt")
     mlflow.log_dict({"content": response}, "response_full.json")

@@ -7,7 +7,6 @@ from langchain_core.prompts import ChatPromptTemplate
 
 llm_model = "databricks-gemma-3-12b"
 
-# embedding_model = "databricks-gte-large-en"
 embedding_model = "databricks-bge-large-en"
 
 vector_search_endpoint = "test_vector_search"
@@ -16,19 +15,10 @@ catalog_name = "workspace"
 schema_name = "my_schema"
 table_doc_embedding = f"{catalog_name}.{schema_name}.rag_doc_embedding"
 
-# Set your token (never hardcode in production!)
-# Optional to do it here but don't need to set here since we already set in app.yaml file
-# os.environ["DATABRICKS_HOST"] = "https://XXX.cloud.databricks.com"
-# os.environ["DATABRICKS_TOKEN"] = "XXX"
-
-# Disable Pricipal Service account authentication as cannot use both (together with Personal Access Token) 
-# os.environ["DATABRICKS_CLIENT_ID"] = ""
-# os.environ["DATABRICKS_CLIENT_SECRET"] = ""
-
 vector_store = DatabricksVectorSearch(
     endpoint=vector_search_endpoint,
     index_name=table_doc_embedding,
-    # If manually use chunk_vector column, then enable 'embedding' and 'text_column' parameters.
+    # If using chunk_vector column manually, then enable 'embedding' and 'text_column' parameters.
     # The index 'workspace.my_schema.rag_doc_embedding' uses Databricks-managed embeddings. Do not pass the `embedding` parameter when initializing vector store. 
     # embedding=DatabricksEmbeddings(endpoint=embedding_model),
     # The index 'workspace.my_schema.rag_doc_embedding' has the source column configured as 'chunk_text'. Do not pass the `text_column` parameter.
