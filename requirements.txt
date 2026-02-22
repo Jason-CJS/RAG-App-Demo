@@ -1,0 +1,11 @@
+# Add additional libraries not pre-installed
+# Enables the use of Databricks-native vector search APIs
+databricks-vectorsearch==0.64
+
+# Adds Databricks-native LangChain integrations (e.g., ChatDatabricks, VectorSearchRetrieverTool)
+databricks-langchain==0.14.0
+
+streamlit==1.54.0
+
+# Specify a compatible version range
+# scikit-learn>=1.2.0,<1.3.0

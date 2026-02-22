@@ -1,0 +1,12 @@
+command: ["streamlit", "run", "app.py"]
+
+env:
+  - name: DATABRICKS_HOST
+    value: https://XXX.cloud.databricks.com # your own Databricks workspace URL 
+  - name: DATABRICKS_TOKEN
+    value: "" # your Databricks personal access token 
+  # Disable Pricipal Service account authentication as cannot use both (together with Personal Access Token)
+  - name: DATABRICKS_CLIENT_ID
+    value: ""
+  - name: DATABRICKS_CLIENT_SECRET
+    value: ""
